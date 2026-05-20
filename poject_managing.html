@@ -123,9 +123,9 @@ thead th { background: var(--bg-secondary); font-weight: 500; color: var(--text-
 .section-edu-before { background: color-mix(in srgb, var(--color-section-before) 12%, transparent) !important; color: var(--color-section-before) !important; }
 .section-edu-after { background: color-mix(in srgb, var(--color-section-after) 12%, transparent) !important; color: var(--color-section-after) !important; }
 
-.row-name { text-align: left; padding: 14px 16px; min-width: 260px; max-width: 300px; background: var(--bg-primary); position: sticky; left: 0; z-index: 2; }
-.row-name input.company-input { width: 100%; border: 1px solid transparent; background: transparent; font-weight: 500; font-size: 14px; color: var(--text-primary); font-family: var(--font-sans); outline: none; padding: 5px 7px; border-radius: 4px; margin-bottom: 6px; }
-.row-name input.company-input:focus, .row-name input.company-input:hover { background: var(--bg-secondary); border-color: var(--border-tertiary); }
+.row-name { text-align: left; padding: 14px 16px; min-width: 300px; width: 300px; background: var(--bg-primary); position: sticky; left: 0; z-index: 2; }
+.row-name .company-input { display: block; width: 100%; border: 1px solid transparent; background: transparent; font-weight: 500; font-size: 14px; color: var(--text-primary); font-family: var(--font-sans); line-height: 1.45; outline: none; padding: 5px 7px; border-radius: 4px; margin-bottom: 6px; resize: none; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
+.row-name .company-input:focus, .row-name .company-input:hover { background: var(--bg-secondary); border-color: var(--border-tertiary); }
 
 .task-cell { width: 54px; min-width: 54px; cursor: pointer; padding: 14px 0; transition: background 0.15s; }
 .task-cell:hover { background: var(--bg-secondary); }
@@ -560,6 +560,13 @@ function autoGrow(el) {
   el.style.height = (el.scrollHeight) + 'px';
 }
 
+function handleCompanyNameKey(e, el) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    el.blur();
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // 렌더링
 // ─────────────────────────────────────────────────────────────
@@ -614,7 +621,7 @@ function renderBody() {
     const dl = deadlineInfo(c.deadline);
     return `<tr>
       <td class="row-name">
-        <input type="text" class="company-input" value="${escAttr(c.name)}" onchange="updateField(${c.id}, 'name', this.value)" placeholder="기업명" />
+        <textarea class="company-input" rows="1" onchange="updateField(${c.id}, 'name', this.value)" oninput="autoGrow(this)" onkeydown="handleCompanyNameKey(event, this)" placeholder="기업명">${escHtml(c.name)}</textarea>
         <div class="meta-row">
           <i class="ti ti-calendar-event"></i>
           <input type="date" class="date-input" value="${escAttr(c.deadline || '')}" onchange="updateField(${c.id}, 'deadline', this.value)" title="마감일" />
@@ -651,7 +658,7 @@ function renderBody() {
       </td>
     </tr>`;
   }).join('');
-  document.querySelectorAll('.memo-input').forEach(autoGrow);
+  document.querySelectorAll('.company-input, .memo-input').forEach(autoGrow);
 }
 
 function renderSummary() {
@@ -730,7 +737,7 @@ function cycleStatus(companyId, taskId) {
 function updateField(companyId, field, value) {
   const c = state.companies.find(c => c.id === companyId);
   if (!c) return;
-  c[field] = (field === 'name' ? (value.trim() || c.name) : value);
+  c[field] = (field === 'name' ? (value.replace(/\s+/g, ' ').trim() || c.name) : value);
   if (field === 'deadline') render(); else { saveState(); renderSummary(); }
 }
 
